@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Google.Apis.YouTube.v3" Version="1.68.0.3394" />
+      <PackageReference Include="HtmlAgilityPack" Version="1.11.60" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="PDFsharp" Version="6.1.0-preview-2" />
     </ItemGroup>

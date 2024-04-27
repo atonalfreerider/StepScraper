@@ -11,8 +11,19 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        string pdfFolderPath = args[0];
+        //string pdfFolderPath = args[0];
+        //string key = args[1];
 
+        string stepFolderPath = args[0];
+        List<string> stepFilePaths = Directory.EnumerateFiles(stepFolderPath, "*.stp").ToList();
+
+        List<FileInfo> stepFiles = stepFilePaths.Select(path => new FileInfo(path)).ToList();
+        
+        FileInfo largestFile = stepFiles.OrderByDescending(file => file.Length).First();
+    }
+
+    static async void ReadPdfExtractYtLinksDownloadStep(string pdfFolderPath, string key)
+    {
         List<string> youtubeLinks = DocReader.ReadFolderAndExtractYoutubeLinks(pdfFolderPath);
         List<string> videoIds = youtubeLinks.Select(ExtractVideoIdFromUrl).ToList();
 
@@ -21,7 +32,7 @@ public class Program
         Dictionary<string, Tuple<string, string>> videoTitleAndDescriptions =
             JsonConvert.DeserializeObject<Dictionary<string, Tuple<string, string>>>(jsonFileText) ?? [];
 
-        //ScrapeYoutubeAndWriteJson(videoIds, videoTitleAndDescriptions, args[1], jsonPath);
+        //ScrapeYoutubeAndWriteJson(videoIds, videoTitleAndDescriptions, key, jsonPath);
 
         List<string> stepZipUrls = [];
         foreach ((string? title, string? description) in videoTitleAndDescriptions.Values)

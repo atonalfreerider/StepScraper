@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="CAD.NET" Version="15.0.0.58788" />
       <PackageReference Include="Google.Apis.YouTube.v3" Version="1.68.0.3394" />
       <PackageReference Include="HtmlAgilityPack" Version="1.11.60" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

@@ -4,6 +4,10 @@ using Google.Apis.Services;
 using Google.Apis.YouTube.v3.Data;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
+using STPLoader;
+using STPLoader.Implementation.Model;
+using STPLoader.Interface;
+
 
 namespace StepScraper;
 
@@ -20,6 +24,19 @@ public class Program
         List<FileInfo> stepFiles = stepFilePaths.Select(path => new FileInfo(path)).ToList();
         
         FileInfo largestFile = stepFiles.OrderByDescending(file => file.Length).First();
+
+        ILoader loader = LoaderFactory.CreateFileLoader(largestFile.FullName);
+
+        IParser parser = ParserFactory.Create();
+        IStpModel stpModel = parser.Parse(loader.Load());
+        
+        if(stpModel is StpFile stpFile)
+        {
+            var z = 1;
+        }
+
+
+        var x = 1;
     }
 
     static async void ReadPdfExtractYtLinksDownloadStep(string pdfFolderPath, string key)

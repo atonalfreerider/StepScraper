@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.Diagnostics;
 using Google.Apis.YouTube.v3;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3.Data;
@@ -36,8 +37,47 @@ public class Program
         List<string> stepFilePaths = Directory.EnumerateFiles(stepFolderPath, "*.stp").ToList();
 
         List<FileInfo> stepFiles = stepFilePaths.Select(path => new FileInfo(path)).ToList();
-        
+
         FileInfo largestFile = stepFiles.OrderByDescending(file => file.Length).First();
+        
+        // Define the path to the FreeCAD command-line executable
+        string freeCadCmdPath = @"C:\Program Files\FreeCAD 0.21\bin\FreeCADCmd.exe";
+        // Define the path to your Python script
+        string pythonScriptPath = "stp2obj.py";
+        // Define the full path to the .stp file
+        string stpFilePath = largestFile.FullName;
+
+        // Create a new process
+        Process process = new Process();
+        
+        // Set up the process start information
+        process.StartInfo.FileName = freeCadCmdPath;
+        process.StartInfo.Arguments = $"-c \"exec(open('{pythonScriptPath.Replace("\\", "\\\\")}').read());\"";
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+        
+        // Set the environment variable for the process
+        process.StartInfo.EnvironmentVariables["STP_FILE_PATH"] = stpFilePath;
+
+        // Start the process
+        process.Start();
+        
+        // Read the outputs
+        string output = await process.StandardOutput.ReadToEndAsync();
+        string errors = await process.StandardError.ReadToEndAsync();
+
+        // Wait for the process to end
+        await process.WaitForExitAsync();
+
+        // Display the outputs
+        Console.WriteLine("Output:");
+        Console.WriteLine(output);
+        if (!string.IsNullOrEmpty(errors))
+        {
+            Console.WriteLine("Errors:");
+            Console.WriteLine(errors);
+        }
     }
 
     static async void ReadPdfExtractYtLinksDownloadStep(string pdfFolderPath, string key)

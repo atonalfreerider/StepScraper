@@ -17,11 +17,19 @@ public class Program
         List<string> videoIds = youtubeLinks.Select(ExtractVideoIdFromUrl).ToList();
 
         string jsonPath = Path.Combine(pdfFolderPath, "videoTitleAndDescriptions.json");
+
+        Dictionary<string, Tuple<string, string>> videoTitleAndDescriptions = new();
+        if (!File.Exists(jsonPath))
+        {
+            string json = JsonConvert.SerializeObject(videoTitleAndDescriptions, Formatting.Indented);
+            await File.WriteAllTextAsync(jsonPath, json);
+        }
+        
         string jsonFileText = await File.ReadAllTextAsync(jsonPath);
-        Dictionary<string, Tuple<string, string>> videoTitleAndDescriptions =
+        videoTitleAndDescriptions =
             JsonConvert.DeserializeObject<Dictionary<string, Tuple<string, string>>>(jsonFileText) ?? [];
 
-        //ScrapeYoutubeAndWriteJson(videoIds, videoTitleAndDescriptions, args[1], jsonPath);
+        ScrapeYoutubeAndWriteJson(videoIds, videoTitleAndDescriptions, args[1], jsonPath);
 
         List<string> stepZipUrls = [];
         foreach ((string? title, string? description) in videoTitleAndDescriptions.Values)
@@ -41,7 +49,7 @@ public class Program
 
     static string ExtractVideoIdFromUrl(string url)
     {
-        Uri uri = new Uri(url);
+        Uri uri = new(url);
         NameValueCollection query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         return query["v"] ?? url[(url.LastIndexOf('/') + 1)..];
     }
@@ -65,7 +73,7 @@ public class Program
             }
 
             // open the youtube link and scrape the video description
-            YouTubeService youtubeService = new YouTubeService(new BaseClientService.Initializer()
+            YouTubeService youtubeService = new(new BaseClientService.Initializer()
             {
                 ApiKey = apiKey
             });
@@ -106,7 +114,7 @@ public class Program
             // download zip file
             string zipPath = Path.Combine(pdfFolderPath, stepZipUrl[(stepZipUrl.LastIndexOf('/') + 1)..]);
             Console.WriteLine($"Downloading {stepZipUrl} to {zipPath}");
-            using HttpClient client = new HttpClient();
+            using HttpClient client = new();
 
             try
             {
@@ -122,7 +130,7 @@ public class Program
 
     static async Task<string> FetchDownloadLink(string url)
     {
-        using HttpClient httpClient = new HttpClient();
+        using HttpClient httpClient = new();
         HttpResponseMessage response = await httpClient.GetAsync(url);
         try
         {
@@ -136,7 +144,7 @@ public class Program
 
         string htmlContent = await response.Content.ReadAsStringAsync();
 
-        HtmlDocument htmlDoc = new HtmlDocument();
+        HtmlDocument htmlDoc = new();
         htmlDoc.LoadHtml(htmlContent);
 
         HtmlNode? downloadButton = htmlDoc.DocumentNode.SelectSingleNode("//*[@id='downloadButton']");

@@ -1,5 +1,6 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.IO.Compression;
 using Google.Apis.YouTube.v3;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3.Data;
@@ -34,9 +35,38 @@ public class Program
         //string key = args[1];
 
         string stepFolderPath = args[0];
-        List<string> stepFilePaths = Directory.EnumerateFiles(stepFolderPath, "*.stp").ToList();
+        
+        List<string> zipFilePaths = Directory.EnumerateFiles(stepFolderPath, "*.zip").ToList();
+        List<string> zipFolders = [];
+        foreach (string zipFilePath in zipFilePaths)
+        {
+            string zipFileName = Path.GetFileName(zipFilePath);
+            string zipFolderName = zipFileName.Replace(".zip", "");
+            string zipFolder = Path.Combine(stepFolderPath, zipFolderName);
+            
+            zipFolders.Add(zipFolder);
+            if (!Directory.Exists(zipFolder))
+            {
+                Directory.CreateDirectory(zipFolder);
+            }
+            Console.WriteLine($"Extracting {zipFilePath} to {zipFolder}");
+            ZipFile.ExtractToDirectory(zipFilePath, zipFolder);
+        }
 
+        foreach (string unzipPath in zipFolders)
+        {
+            string subPath = Path.Combine(unzipPath, Directory.EnumerateDirectories(unzipPath).First());
+            
+            string[] stepFilePaths = Directory.EnumerateFiles(subPath, "*.stp").ToArray();
+            await Convert(stepFilePaths);
+        }
+    }
+
+    static async Task Convert(string[] stepFilePaths)
+    {
         List<FileInfo> stepFiles = stepFilePaths.Select(path => new FileInfo(path)).ToList();
+
+        if (!stepFiles.Any()) return;
 
         FileInfo largestFile = stepFiles.OrderByDescending(file => file.Length).First();
         
@@ -71,7 +101,7 @@ public class Program
         await process.WaitForExitAsync();
 
         // Display the outputs
-        Console.WriteLine("Output:");
+        Console.WriteLine("Output:" + stpFilePath);
         Console.WriteLine(output);
         if (!string.IsNullOrEmpty(errors))
         {
@@ -79,7 +109,7 @@ public class Program
             Console.WriteLine(errors);
         }
     }
-
+    
     static async void ReadPdfExtractYtLinksDownloadStep(string pdfFolderPath, string key)
     {
         List<string> youtubeLinks = DocReader.ReadFolderAndExtractYoutubeLinks(pdfFolderPath);
